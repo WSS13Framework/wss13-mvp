@@ -3,58 +3,247 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WSS13 - Gestão de Obras MVP</title>
+    <title>WSS+13 Construction Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@100;200;300;400;500;600;700;800;900&display=swap');
+        
+        * {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        body {
+            background: #f5f5f7;
+        }
+        
+        .wss-blue {
+            background: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .metric-card {
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .progress-track {
+            background: #E5E5EA;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #34C759 0%, #30D158 100%);
+            transition: width 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .table-row {
+            border-bottom: 1px solid #E5E5EA;
+            transition: background-color 0.2s ease;
+        }
+        
+        .table-row:hover {
+            background: rgba(0, 122, 255, 0.03);
+        }
+        
+        .nav-link {
+            color: #1D1D1F;
+            font-weight: 400;
+            transition: color 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            color: #007AFF;
+        }
+        
+        .nav-link.active {
+            color: #007AFF;
+            font-weight: 500;
+        }
+    </style>
 </head>
-<body class="bg-gray-100">
-    <div x-data="dashboard()" x-init="carregarObras()" class="container mx-auto px-4 py-8">
-        <div class="mb-8">
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">🏗️ WSS13 - Gestão de Obras</h1>
-            <p class="text-gray-600">MVP Funcional - Sistema de Comunicação e Controle</p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                            <span class="text-white text-sm font-bold" x-text="obras.length"></span>
+<body>
+    <div x-data="dashboard()" x-init="init()">
+        
+        <!-- Header -->
+        <header class="bg-white/80 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-8 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-6">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 wss-blue rounded-lg flex items-center justify-center">
+                                <span class="text-white font-semibold text-sm">W</span>
+                            </div>
+                            <div>
+                                <h1 class="text-xl font-semibold text-gray-900">WSS+13</h1>
+                            </div>
                         </div>
+                        
+                        <nav class="hidden md:flex space-x-8">
+                            <a href="#" class="nav-link active">Dashboard</a>
+                            <a href="#" class="nav-link">Projetos</a>
+                            <a href="#" class="nav-link">Equipe</a>
+                            <a href="#" class="nav-link">Relatórios</a>
+                        </nav>
                     </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Total de Obras</p>
-                        <p class="text-2xl font-bold text-gray-900" x-text="obras.length"></p>
+                    
+                    <div class="flex items-center space-x-4">
+                        <div class="text-sm text-gray-500">
+                            <span x-text="lastUpdate"></span>
+                        </div>
+                        <button @click="refreshData()" 
+                                class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors">
+                            Atualizar
+                        </button>
                     </div>
                 </div>
             </div>
-        </div>
+        </header>
 
-        <div class="bg-white rounded-lg shadow">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-xl font-semibold text-gray-800">📋 Obras Ativas</h2>
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-8 py-8">
+            
+            <!-- Page Title -->
+            <div class="mb-8">
+                <h2 class="text-3xl font-thin text-gray-900 mb-2">Dashboard</h2>
+                <p class="text-gray-500 font-light">Visão geral das operações</p>
             </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Obra</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Progresso</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Responsável</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        <template x-for="obra in obras" :key="obra.id">
+
+            <!-- Metrics Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                
+                <!-- Total Projetos -->
+                <div class="card rounded-2xl p-6 metric-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-semibold text-gray-900 mb-1" x-text="obras.length"></div>
+                    <div class="text-sm text-gray-500 font-light">Projetos Ativos</div>
+                </div>
+
+                <!-- Progresso Médio -->
+                <div class="card rounded-2xl p-6 metric-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-semibold text-gray-900 mb-1" x-text="`${progressoMedio}%`"></div>
+                    <div class="text-sm text-gray-500 font-light">Progresso Médio</div>
+                </div>
+
+                <!-- No Prazo -->
+                <div class="card rounded-2xl p-6 metric-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-semibold text-gray-900 mb-1" x-text="obrasNoPrazo"></div>
+                    <div class="text-sm text-gray-500 font-light">No Prazo</div>
+                </div>
+
+                <!-- Valor Total -->
+                <div class="card rounded-2xl p-6 metric-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-semibold text-gray-900 mb-1" x-text="formatCurrency(orcamentoTotal)"></div>
+                    <div class="text-sm text-gray-500 font-light">Valor Total</div>
+                </div>
+
+            </div>
+
+            <!-- Projects Table -->
+            <div class="card rounded-2xl overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100">
+                    <h3 class="text-lg font-medium text-gray-900">Projetos</h3>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50/50">
                             <tr>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900" x-text="obra.nome_obra"></div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap" x-text="`${obra.progresso_percentual}%`"></td>
-                                <td class="px-6 py-4 whitespace-nowrap" x-text="obra.nome_engenheiro || 'Não atribuído'"></td>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Projeto</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progresso</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Responsável</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Orçamento</th>
                             </tr>
-                        </template>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody class="bg-white">
+                            <template x-for="obra in obras" :key="obra.id">
+                                <tr class="table-row">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center">
+                                            <div class="status-dot mr-3"
+                                                 :class="getStatusColor(obra.progresso_percentual)"></div>
+                                            <div>
+                                                <div class="text-sm font-medium text-gray-900" x-text="obra.nome_obra"></div>
+                                                <div class="text-sm text-gray-500" x-text="obra.endereco"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center">
+                                            <div class="w-16 progress-track rounded-full h-2 mr-3">
+                                                <div class="progress-fill h-2 rounded-full"
+                                                     :style="`width: ${obra.progresso_percentual}%`"></div>
+                                            </div>
+                                            <span class="text-sm text-gray-900" x-text="`${Math.round(obra.progresso_percentual)}%`"></span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-900" x-text="obra.nome_engenheiro || 'Não atribuído'"></td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full"
+                                              :class="getStatusBadgeClass(obra.dias_restantes)"
+                                              x-text="getStatusText(obra.dias_restantes)"></span>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-900" x-text="formatCurrency(obra.orcamento_total)"></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Loading -->
+        <div x-show="loading" class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
+            <div class="card rounded-2xl p-6">
+                <div class="flex items-center space-x-3">
+                    <div class="animate-spin w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                    <span class="text-gray-900 font-medium">Carregando...</span>
+                </div>
             </div>
         </div>
     </div>
@@ -63,16 +252,82 @@
         function dashboard() {
             return {
                 obras: [],
-                async carregarObras() {
+                loading: false,
+                lastUpdate: '',
+
+                get progressoMedio() {
+                    if (this.obras.length === 0) return 0;
+                    const total = this.obras.reduce((sum, obra) => sum + parseFloat(obra.progresso_percentual), 0);
+                    return Math.round(total / this.obras.length);
+                },
+
+                get obrasNoPrazo() {
+                    return this.obras.filter(obra => obra.dias_restantes > 30 || obra.progresso_percentual >= 80).length;
+                },
+
+                get orcamentoTotal() {
+                    return this.obras.reduce((sum, obra) => sum + parseFloat(obra.orcamento_total || 0), 0);
+                },
+
+                async init() {
+                    await this.loadData();
+                    this.updateTimestamp();
+                },
+
+                async loadData() {
+                    this.loading = true;
                     try {
                         const response = await fetch('http://localhost:3001/api/obras');
                         const data = await response.json();
+                        
                         if (data.success) {
                             this.obras = data.data;
                         }
                     } catch (error) {
-                        console.error('Erro ao carregar obras:', error);
+                        console.error('Error loading data:', error);
+                    } finally {
+                        this.loading = false;
                     }
+                },
+
+                async refreshData() {
+                    await this.loadData();
+                    this.updateTimestamp();
+                },
+
+                updateTimestamp() {
+                    this.lastUpdate = new Date().toLocaleTimeString('pt-BR', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    });
+                },
+
+                formatCurrency(value) {
+                    return new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    }).format(value || 0);
+                },
+
+                getStatusColor(progresso) {
+                    if (progresso >= 80) return 'bg-green-500';
+                    if (progresso >= 50) return 'bg-orange-500';
+                    return 'bg-red-500';
+                },
+
+                getStatusBadgeClass(diasRestantes) {
+                    if (diasRestantes > 60) return 'bg-green-100 text-green-800';
+                    if (diasRestantes > 30) return 'bg-orange-100 text-orange-800';
+                    return 'bg-red-100 text-red-800';
+                },
+
+                getStatusText(diasRestantes) {
+                    if (diasRestantes > 60) return 'No prazo';
+                    if (diasRestantes > 30) return 'Atenção';
+                    if (diasRestantes > 0) return 'Urgente';
+                    return 'Atrasado';
                 }
             }
         }
