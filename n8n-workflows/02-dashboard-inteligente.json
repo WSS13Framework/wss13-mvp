@@ -1,0 +1,91 @@
+{
+  "name": "WSS13 - Dashboard Executivo Inteligente",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "obra/dashboard",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "id": "webhook-dashboard",
+      "name": "Webhook Dashboard",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [300, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3001/api/obras",
+        "options": {}
+      },
+      "id": "buscar-obras",
+      "name": "Buscar Obras",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "headerAuth",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "{\n  \"model\": \"gpt-4\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Você é um consultor executivo de construção civil. Analise os dados das obras e gere insights: 1) Status geral 2) Obras críticas 3) Oportunidades 4) Recomendações estratégicas\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Dados das obras: {{ JSON.stringify($node['Buscar Obras'].json.data) }}\"\n    }\n  ],\n  \"max_tokens\": 1000\n}"
+      },
+      "id": "gerar-insights",
+      "name": "Gerar Insights IA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"dashboard\": {\n    \"obras\": {{ JSON.stringify($node['Buscar Obras'].json.data) }},\n    \"insights\": \"{{ $node['Gerar Insights IA'].json.choices[0].message.content }}\",\n    \"estatisticas\": {\n      \"total_obras\": {{ $node['Buscar Obras'].json.data.length }},\n      \"obras_no_prazo\": {{ $node['Buscar Obras'].json.data.filter(o => o.dias_restantes > 30).length }},\n      \"obras_criticas\": {{ $node['Buscar Obras'].json.data.filter(o => o.problemas_abertos > 3).length }}\n    },\n    \"timestamp\": \"{{ new Date().toISOString() }}\"\n  }\n}"
+      },
+      "id": "resposta-dashboard",
+      "name": "Resposta Dashboard",
+      "type": "n8n-nodes-base.webhookResponse",
+      "typeVersion": 1,
+      "position": [1200, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Dashboard": {
+      "main": [
+        [
+          {
+            "node": "Buscar Obras",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Obras": {
+      "main": [
+        [
+          {
+            "node": "Gerar Insights IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar Insights IA": {
+      "main": [
+        [
+          {
+            "node": "Resposta Dashboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "staticData": null
+}

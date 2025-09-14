@@ -1,0 +1,130 @@
+{
+  "name": "WSS13 - Monitor Proativo de Problemas",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 */2 * * *"
+            }
+          ]
+        }
+      },
+      "id": "trigger-monitor",
+      "name": "Monitor a Cada 2h",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [300, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3001/api/obras",
+        "options": {}
+      },
+      "id": "verificar-obras",
+      "name": "Verificar Obras",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "leftValue": "{{ $json.dias_restantes }}",
+            "operation": "smaller"
+          },
+          "conditions": [
+            {
+              "leftValue": "30",
+              "operation": "smaller"
+            }
+          ]
+        }
+      },
+      "id": "filtrar-criticas",
+      "name": "Filtrar Obras Críticas",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "headerAuth",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "{\n  \"model\": \"gpt-4\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Você é um gestor de obras. Analise obras em situação crítica e gere plano de ação urgente com: 1) Problemas identificados 2) Ações imediatas 3) Recursos necessários 4) Cronograma recuperação\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Obra crítica: {{ JSON.stringify($json) }}\"\n    }\n  ]\n}"
+      },
+      "id": "gerar-plano-acao",
+      "name": "Gerar Plano de Ação",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1200, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.telegram.org/bot{{ $credentials.telegram.token }}/sendMessage",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "{\n  \"chat_id\": \"-1001234567890\",\n  \"text\": \"🚨 *ALERTA CRÍTICO - OBRA EM RISCO* 🚨\\n\\n🏗️ *Obra:* {{ $json.nome_obra }}\\n📅 *Prazo:* {{ $json.dias_restantes }} dias restantes\\n📊 *Progresso:* {{ $json.progresso_percentual }}%\\n⚠️ *Problemas:* {{ $json.problemas_abertos }}\\n\\n🤖 *Plano de Ação IA:*\\n{{ $node['Gerar Plano de Ação'].json.choices[0].message.content }}\\n\\n🔗 Acesse o sistema para mais detalhes\",\n  \"parse_mode\": \"Markdown\"\n}"
+      },
+      "id": "notificar-telegram",
+      "name": "Notificar Telegram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1500, 300]
+    }
+  ],
+  "connections": {
+    "Monitor a Cada 2h": {
+      "main": [
+        [
+          {
+            "node": "Verificar Obras",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar Obras": {
+      "main": [
+        [
+          {
+            "node": "Filtrar Obras Críticas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrar Obras Críticas": {
+      "main": [
+        [
+          {
+            "node": "Gerar Plano de Ação",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar Plano de Ação": {
+      "main": [
+        [
+          {
+            "node": "Notificar Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "staticData": null
+}

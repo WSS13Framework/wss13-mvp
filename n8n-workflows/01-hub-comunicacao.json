@@ -1,0 +1,79 @@
+{
+  "name": "WSS13 - Hub Central de Comunicação",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "obra/comunicacao",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "id": "webhook1",
+      "name": "Webhook Comunicação",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [300, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "leftValue": "{{ $json.body.urgencia }}",
+            "operation": "equal"
+          },
+          "conditions": [
+            {
+              "leftValue": "critica",
+              "operation": "equal"
+            }
+          ]
+        }
+      },
+      "id": "if1",
+      "name": "Verificar Urgência",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3001/api/comunicacoes",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "{{ JSON.stringify($json.body) }}",
+        "options": {}
+      },
+      "id": "http1",
+      "name": "Salvar no Backend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Comunicação": {
+      "main": [
+        [
+          {
+            "node": "Verificar Urgência",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar Urgência": {
+      "main": [
+        [
+          {
+            "node": "Salvar no Backend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "staticData": null
+}

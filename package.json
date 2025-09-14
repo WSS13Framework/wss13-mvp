@@ -1,0 +1,39 @@
+{
+  "name": "wss13-gestao-obras-mvp",
+  "version": "1.0.0",
+  "description": "Sistema inteligente de gestão de obras para construtoras",
+  "main": "backend/index.js",
+  "scripts": {
+    "start": "cd backend && npm start",
+    "dev": "cd backend && npm run dev",
+    "setup": "./scripts/setup-database.sh",
+    "start-all": "./scripts/start-all.sh",
+    "stop-all": "./scripts/stop-all.sh",
+    "backup": "./scripts/backup-database.sh",
+    "logs": "./scripts/show-logs.sh",
+    "deploy": "./scripts/deploy-digital-ocean.sh",
+    "test": "echo 'Tests não implementados ainda'"
+  },
+  "keywords": [
+    "gestao-obras",
+    "construtoras",
+    "n8n",
+    "automacao",
+    "comunicacao"
+  ],
+  "author": "WSS13 Tecnologia",
+  "license": "PROPRIETARY",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wss13/gestao-obras-mvp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/wss13/gestao-obras-mvp/issues",
+    "email": "suporte@wss13.com.br"
+  },
+  "homepage": "https://wss13.com.br"
+}
