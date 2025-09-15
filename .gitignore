@@ -1,28 +1,28 @@
-# Dependencies
+# Dependências e logs de pacotes
 node_modules/
 npm-debug.log*
 
-# Environment variables
+# Variáveis de ambiente
 .env
 .env.local
 .env.production
 
-# Logs
+# Logs do sistema
 logs/
 *.log
 
-# Runtime data
+# Dados de runtime
 pids/
 *.pid
 
-# Database backups
+# Backups (se não for para versionar o diretório completo de backups)
 backups/
 
-# Temporary files
+# Arquivos temporários
 tmp/
 temp/
 
-# OS generated files
+# Arquivos gerados por sistemas operacionais
 .DS_Store
 .DS_Store?
 ._*
@@ -31,20 +31,27 @@ temp/
 ehthumbs.db
 Thumbs.db
 
-# IDE
+# Arquivos e diretórios de IDEs
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# Build outputs
+# Saídas de build
 dist/
 build/
 
-
 # Credenciais do MySQL (MUITO IMPORTANTE: NUNCA ENVIE ESTE ARQUIVO PARA O GIT!)
 .my.cnf
-# Outros arquivos/diretórios que não devem ser versionados (ex: temporários, logs)
-node_modules/
-*.log
-.env
+
+# == INÍCIO DAS NOVAS ENTRADAS (OU CORREÇÕES) ==
+# Arquivos específicos do projeto que não devem ser versionados
+frontend/index-old.html
+seu_script_de_backup.sh
+
+# Certificados SSL/TLS (CRUCIAL: NUNCA versionar chaves privadas!)
+*.key
+*.crt
+*.pem
+*.csr
+# == FIM DAS NOVAS ENTRADAS ==
